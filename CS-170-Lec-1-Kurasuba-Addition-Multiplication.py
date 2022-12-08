@@ -37,7 +37,6 @@ def add(x, y):
     # we start adding from the rightmost digit
     i = n-1
     carry = 0
-    
     result = ['0']*(n+1)
     
     while i >= 0:
@@ -55,3 +54,5 @@ def add(x, y):
         result[0] = '1'
         
     return ''.join(stripLeadingZeroes(result))
+
+print(add("12", "94"))
