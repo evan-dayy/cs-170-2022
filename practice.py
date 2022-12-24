@@ -29,97 +29,107 @@ multiplicationTable = [  # we memorize x*y for x,y being single digits
 ]
 
 
-def stripLeadingZeros(s):
-    i = 0
-    while i < len(s) and s[i] == "0":
-        i += 1
-    if i == len(s):
-        return "0"
-    return s[i:]
+def strip(s):
+    for i in range(len(s)):
+        if i < len(s) and s[i] == "0":
+            continue
+        else:
+            return s[i:]
+    return "0"
 
 
 def add(x, y):
-    if len(x) < len(y):
-        x = "0" * (len(y) - len(x)) + x
-    else:
-        y = "0" * (len(x) - len(y)) + y
-    n = len(x)
-    res = ["0"] * (n + 1)
+    n = max(len(x), len(y))
+    x = "0" * (n - len(x)) + x
+    y = "0" * (n - len(y)) + y
+    i = n - 1
     carry = 0
-    for i in range(n - 1, -1, -1):
-        d = additionTable[int(x[i])][int(y[i])]
+    res = ["0"] * (n + 1)
+    while i >= 0:
+        temp = additionTable[int(x[i])][int(y[i])]
         if carry == 1:
-            d = increment[int(d)]
-        res[i + 1] = d[-1]
-        if len(d) == 2:
+            temp = increment[int(temp)]
+        res[i + 1] = temp[-1]
+        if len(temp) == 2:
             carry = 1
         else:
             carry = 0
-    if carry ==GO 1:
+        i -= 1
+    if carry == 1:
         res[0] = "1"
-    return "".join(stripLeadingZeros(res))
+    return "".join(strip(res))
 
 
-def multipleDigit(c, x):
+print(add("1212121", "234"))
+print(" ---- ")
+
+
+def multiple_digit(c, x):
     n = len(x)
     res = ["0"] * (n + 1)
+    i = n - 1
     carry = "0"
-    for i in range(n - 1, -1, -1):
-        d = multiplicationTable[int(c)][int(x[i])]
-        d = add(d, carry)
-        res[i + 1] = d[-1]
-        if len(d) == 2:
-            carry = d[0]
+    while i >= 0:
+        temp = multiplicationTable[int(c)][int(x[i])]
+        temp = add(carry, temp)
+        if len(temp) == 2:
+            carry = temp[0]
         else:
             carry = "0"
-    if carry != "0":
-        res[0] = carry
-    return "".join(stripLeadingZeros(res))
+        res[i + 1] = temp[-1]
+        i -= 1
+    return "".join(strip(res))
 
 
-def grade_school_multiple(x, y):
-    if len(x) < len(y):
-        x = "0" * (len(y) - len(x)) + x
-    else:
-        y = "0" * (len(x) - len(y)) + y
-    n = len(x)
+print(multiple_digit("2", "1233"))
+
+
+def multiple(x, y):
+    n = max(len(x), len(y))
+    x = "0" * (n - len(x)) + x
+    y = "0" * (n - len(y)) + y
     result = "0"
+    i = n - 1
     zeros = ""
-    for i in range(n - 1, -1, -1):
-        result = add(result, multipleDigit(y[i], x) + zeros)
+    while i >= 0:
+        result = add(result, multiple_digit(y[i], x) + zeros)
         zeros += "0"
+        i -= 1
     return result
+
+
+print(multiple("123333", "12"))
+print(123333 * 12)
 
 
 def subtract(x, y):
     return str(int(x) - int(y))
 
 
-def Karatsuba(x, y):
+def karasuba_mul(x, y):
     n = max(len(x), len(y))
-    x = '0' * (n - len(x)) + x
-    y = '0' * (n - len(y)) + y
+    x = "0" * (n - len(x)) + x
+    y = "0" * (n - len(y)) + y
+
+    # base case
     if n == 1:
         return multiplicationTable[int(x)][int(y)]
 
-    x_low = x[n // 2:]
-    x_high = x[:n // 2]
-    y_low = y[n // 2:]
-    y_high = y[:n // 2]
+    xlo = x[n // 2:]
+    xhi = x[: n // 2]
+    ylo = y[n // 2:]
+    yhi = y[:n // 2]
 
-    A = Karatsuba(x_high, y_high)
-    B = Karatsuba(x_low, y_low)
-    E = Karatsuba(add(x_low, x_high), add(y_low, y_high))
+    A = karasuba_mul(xhi, yhi)
+    B = karasuba_mul(xlo, ylo)
+    E = karasuba_mul(add(xlo, xhi), add(ylo, yhi))
 
-    result = A + "0" * 2 * len(x_low)
-    result = add(result, B)
-    result = add(result, subtract(E, add(A, B)) + "0" * len(x_low))
-    return result
+    res = A + "0" * len(xlo) * 2
+    res = add(res, B)
+    res = add(res, subtract(E, add(A, B)) + "0" * len(xlo))
+
+    return res
 
 
-print(add("29", "19"))
-print(multipleDigit("8", "29"))
-print(grade_school_multiple("123", "123"))
-print(Karatsuba("123", "123"))
-print(123 * 123)
-
+print(karasuba_mul("123333", "12"))
+print(123333 * 12)
