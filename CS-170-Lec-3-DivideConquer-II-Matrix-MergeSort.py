@@ -6,6 +6,7 @@ from numpy import sort
 
 nla
 
+
 class Matrix:
     # A should be a list of lists with the matrix entries
     def __init__(self, A):
