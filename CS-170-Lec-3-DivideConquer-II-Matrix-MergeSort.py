@@ -1,8 +1,10 @@
 # MATRIX class (from scratch, but one could also use numpy)
-from functools import *
+
+from heapq import *
 
 from numpy import sort
 
+nla
 
 class Matrix:
     # A should be a list of lists with the matrix entries
@@ -215,3 +217,28 @@ L = [10, 1, 4, 2, 9, 8, 21, 42, 85]
 print(sort(L))
 print(fast_select(L, 4))
 print(sorted(L)[3])
+
+
+def decToBinary(n):
+    # array to store
+    # binary number
+    binaryNum = [0] * n
+
+    # counter for binary array
+    i = 0
+    while n > 0:
+        # storing remainder
+        # in binary array
+        binaryNum[i] = n % 2
+        n = int(n / 2)
+        i += 1
+
+    # printing binary array
+    # in reverse order
+    for j in range(i - 1, -1, -1):
+        print(binaryNum[j], end="")
+
+
+# Driver Code
+n = 17
+decToBinary(n)
