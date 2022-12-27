@@ -84,6 +84,14 @@ class MinHeap:
             return self.arr[0]
 
 
+# HUFFMAN ENCODING
+
+# alphabet is {0,1,...,n-1}, and character j appears frequencies[j] times
+# returns a 'parent' array of length 2n-1; parent[u] is the parent node of u,
+# and is_left[u] is 1 if u is left child of parent[u] and 0 if right child
+# (so we know which character to append in the huffman encoding)
+# in the final output, parent[x] will be -1 only for  the root
+
 """
 Huffman Encoding Idea: there is a 1-1 corresponding between the prefix-free code and the 
 leaf of a full binary tree. The idea is simple
@@ -155,15 +163,78 @@ def huffman_encode(parent, is_left, c):
     return ret[::-1]
 
 
-p, is_left = huffman([4,4,4,4])
+p, is_left = huffman([70, 3, 20, 37])
 print(p)
 for c in range(4):
     print(huffman_encode(p, is_left, c))
 
 print(" ------ ")
 
-p, is_left = huffman_alternative([4,4,4,4])
+p, is_left = huffman_alternative([70, 3, 20, 37])
 print(p)
 for c in range(4):
     print(huffman_encode(p, is_left, c))
 
+
+# C is a collection of sets, and we want to pick as small a subset as possible
+# that has the same union
+# returns list of indices of which sets were taken
+# def greedy_set_cover(C):
+#     ret = []
+#     uncovered = set()
+#     used = [False] * len(C)
+#     for S in C:
+#         uncovered.update(S)
+#     D = [set(S) for S in C]
+#     while len(uncovered) > 0:
+#         max_intersection = 0
+#         best = -1
+#         for i in range(len(D)):
+#             if not used[i]:
+#                 score = len(uncovered & D[i])  # & is set intersection in Python
+#                 if score > max_intersection:
+#                     max_intersection = score
+#                     best = i
+#         assert max_intersection != 0
+#         ret.append(best)
+#         used[best] = True
+#         for x in D[best]:
+#             uncovered.discard(x)
+#     return ret
+
+
+# 0  1  2  3  4  5  6
+# 7  8  9 10 11 12 13
+# OPT would take the last two sets, but greedy takes the first three
+
+
+def greedy_set_cover(C):
+    ret = []
+    compare = [set(S) for S in C]
+    total = set()
+    visited = set()
+    for s in C:
+        total.update(s)
+    while len(total) != 0:
+        curr_max = -1
+        curr_idx = -1
+        for idx, s in enumerate(compare):
+            if idx not in visited:
+                curr = len(total & s)
+                if curr > curr_max:
+                    curr_max = curr
+                    curr_idx = idx
+        ret.append(curr_idx)
+        visited.add(curr_idx)
+        for ele in compare[curr_idx]:
+            total.discard(ele)
+    return ret
+
+
+print(greedy_set_cover([
+    [0, 7],
+    [1, 2, 8, 9],
+    [3, 4, 5, 6, 10, 11, 12, 13],
+    [0, 1, 2, 3, 4, 5, 6],
+    [7, 8, 9, 10, 11, 12, 13]
+]))
