@@ -8,7 +8,7 @@ def fib_memoized(n):
         nonlocal mem
         if n <= 1:
             return n
-        elif mem[n]:
+        elif mem[n] is not None:
             return mem[n]
         else:
             mem[n] = fib_memo_helper(n - 1) + fib_memo_helper(n - 2)
@@ -55,10 +55,9 @@ def shortest_path_dag_helper(revG, s, t, mem, choices):
         return 0
     elif len(revG[t]) == 0:
         return float('infinity')
-    elif mem[t]:
+    elif mem[t] != float("inf"):
         return mem[t]
     else:
-        mem[t] = float('infinity')
         for v, w in revG[t]:
             x = shortest_path_dag_helper(revG, s, v, mem, choices) + w
             if x < mem[t]:
@@ -71,17 +70,17 @@ def shortest_path_dag_helper(revG, s, t, mem, choices):
 # mem[u] is length of shortest path from s to u
 # choices[u] is the vertex on the shortest path from s to u, immediately before u
 # (if no path exists, or if u=s, then choices[u] is -1)
-def shortest_path_dag_memoized(G, s):
-    mem = [None] * len(G)
+def shortest_path_dag_memoized(G, s, t):
+    mem = [float("inf")] * len(G)
     choices = [-1] * len(G)
     revG = reverse_weighted_graph(G)
-    for t in range(len(G)):
-        shortest_path_dag_helper(revG, s, t, mem, choices)
+    shortest_path_dag_helper(revG, s, t, mem, choices)
+    print(mem, choices)
     return mem, choices
 
 
 def shortest_path_dag_return_path(G, s, t):
-    mem, choices = shortest_path_dag_memoized(G, s)
+    mem, choices = shortest_path_dag_memoized(G, s, t)
     if mem[t] == float('infinity'):
         return None
     else:
@@ -103,47 +102,55 @@ G = [
 
 print(shortest_path_dag_return_path(G, 0, 4))
 
+# ================================================================
+# ================================================================
+# Bellman-Ford Algorithm in General graph as memoized code
 
-# # Bellman-Ford as memoized code
-#
-# def bellman_ford_memo_helper(revG, s, t, k, mem):
-#     if k == 0:
-#         if s == t:
-#             return 0
-#         else:
-#             return float('infinity')
-#     elif not mem[t][k]:
-#         return mem[t][k]
-#     else:
-#         mem[t][k] = bellman_ford_memo_helper(revG, s, t, k - 1, mem)
-#         for v, w in revG[t]:
-#             mem[t][k] = min(mem[t][k], bellman_ford_memo_helper(revG, s, v, k - 1, mem) + w)
-#         return mem[t][k]
-#
-#
-# # returns None if negative cycle detected
-# # else returns list of length n, where u'th entry is length of shortest path
-# # from s to u
-# def bellman_ford_memo(G, s):
-#     mem = [[None] * (len(G) + 1) for _ in range(len(G))]
-#     revG = reverse_weighted_graph(G)
-#     for u in range(len(G)):
-#         if bellman_ford_memo_helper(revG, s, t, n, mem) < bellman_ford_memo_helper(revG, s, t, n - 1, mem):
-#             return None
-#     return [L[n - 1] for L in mem]
-#
-#
-# # Bellman-Ford as bottom-up DP with space saving (two 1d arrays)
-# # formulaic conversion to bottom-up DP without being clever
-# def bellman_ford_bottom_up_dp(G, s):
-#     mem = [[float('infinity')] * 2 for _ in range(len(G))]
-#     mem[s][0] = 0
-#     revG = reverse_weighted_graph(G)
-#     for k in range(len(G) - 1):
-#         for u in range(len(G)):
-#             mem[u][1] = mem[u][0]
-#             for v, w in G[u]:
-#                 mem[u][1] = min(mem[u][1], mem[v][0] + w)
-#         for u in range(len(G)):
-#             mem[u][0] = mem[u][1]
-#     return [L[1] for L in mem]
+
+def bellman_ford_memo_helper(revG, s, t, k, mem):
+    if k == 0:
+        if s == t:
+            return 0
+        else:
+            return float('infinity')
+    elif mem[t][k] is not None:
+        return mem[t][k]
+    else:
+        mem[t][k] = bellman_ford_memo_helper(revG, s, t, k - 1, mem)
+        for v, w in revG[t]:
+            mem[t][k] = min(mem[t][k], bellman_ford_memo_helper(revG, s, v, k - 1, mem) + w)
+        return mem[t][k]
+
+
+# returns None if negative cycle detected
+# else returns list of length n, where u'th entry is length of shortest path
+# from s to u
+def bellman_ford_memo(G, s):
+    mem = [[None] * (len(G) + 1) for _ in range(len(G))]
+    revG = reverse_weighted_graph(G)
+    n = len(G)
+    for u in range(len(G)):
+        if bellman_ford_memo_helper(revG, s, u, n, mem) < bellman_ford_memo_helper(revG, s, u, n - 1, mem):
+            return None
+    return [L[n - 1] for L in mem]
+
+
+# Bellman-Ford as bottom-up DP with space saving (two 1d arrays)
+# formulaic conversion to bottom-up DP without being clever
+def bellman_ford_bottom_up_dp(G, s):
+    mem = [[float('infinity')] * 2 for _ in range(len(G))]
+    mem[s][0] = 0
+    G = reverse_weighted_graph(G)
+    # print(G)
+    for k in range(len(G) - 1):
+        for u in range(len(G)):
+            mem[u][1] = mem[u][0]
+            for v, w in G[u]:
+                mem[u][1] = min(mem[u][1], mem[v][0] + w)
+        for u in range(len(G)):
+            mem[u][0] = mem[u][1]
+    return [L[1] for L in mem]
+
+
+print(bellman_ford_bottom_up_dp(G, 0))
+print(bellman_ford_memo(G, 0))
