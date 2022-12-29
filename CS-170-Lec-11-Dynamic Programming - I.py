@@ -100,6 +100,14 @@ G = [
     []
 ]
 
+G1 = [
+    [[1, 15], [2, 3]],
+    [[3, 1]],
+    [[3, 2], [0, -4]],
+    [[4, -1]],
+    []
+]
+
 print(shortest_path_dag_return_path(G, 0, 4))
 
 # ================================================================
@@ -129,6 +137,7 @@ def bellman_ford_memo(G, s):
     mem = [[None] * (len(G) + 1) for _ in range(len(G))]
     revG = reverse_weighted_graph(G)
     n = len(G)
+    # detect the negative cycle cases
     for u in range(len(G)):
         if bellman_ford_memo_helper(revG, s, u, n, mem) < bellman_ford_memo_helper(revG, s, u, n - 1, mem):
             return None
@@ -142,15 +151,26 @@ def bellman_ford_bottom_up_dp(G, s):
     mem[s][0] = 0
     G = reverse_weighted_graph(G)
     # print(G)
-    for k in range(len(G) - 1):
+    for k in range(len(G)):
         for u in range(len(G)):
             mem[u][1] = mem[u][0]
             for v, w in G[u]:
                 mem[u][1] = min(mem[u][1], mem[v][0] + w)
+        # check the negative cycle
+        if k == len(G) - 1:
+            for u in range(len(G)):
+                if mem[u][0] > mem[u][1]:
+                    return None
+            return [L[0] for L in mem]
         for u in range(len(G)):
             mem[u][0] = mem[u][1]
+
     return [L[1] for L in mem]
 
 
 print(bellman_ford_bottom_up_dp(G, 0))
 print(bellman_ford_memo(G, 0))
+
+print(bellman_ford_memo(G1, 0))
+print(bellman_ford_bottom_up_dp(G1, 0))
+
