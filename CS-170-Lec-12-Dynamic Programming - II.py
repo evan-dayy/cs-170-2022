@@ -1,4 +1,19 @@
 # Floyd-Warshall Algorithm
+"""
+- Define the functions f(i, j, k): return the shortest path from i to j
+using only the k in {1, ..., k}. We want return f(*, *, n)
+- Recursive relationship:
+    if k == 0: suggesting that we cannot using any edges
+        when i == j: return 0
+        when i != j: return w(i, j)
+    else:
+        f(i, j, k) = min(
+                            f(i, j, k - 1) -- I choose not to pick k
+                            f(i, k, k - 1) + f(k, j, k - 1) -- pick k
+                        )
+"""
+
+
 def floyd_warshall(G):
     T = [[float('infinity')] * len(G) for _ in range(len(G))]
     for u in range(len(G)):
@@ -33,7 +48,8 @@ def floyd_warshall_memo(G):
             D[u][v] = w
     for i in range(len(G)):
         for j in range(len(G)):
-            floyd_warshall_memo_helper(D, mem, i, j, len(G) - 1)
+            D[i][j] = floyd_warshall_memo_helper(D, mem, i, j, len(G) - 1)
+    return D
 
 
 # formulaic implementation of bottom up DP for floyd warshall with O(n^2) memory
@@ -58,10 +74,26 @@ def floyd_warshall_bottom_up(G):
     return ret
 
 
+G = [
+    [[1, 15], [2, 3]],
+    [[3, 1]],
+    [[3, 2]],
+    [[4, -1]],
+    []
+]
+
+# print(floyd_warshall(G), "\n")
+# print(floyd_warshall_memo(G), "\n")
+# print(floyd_warshall_bottom_up(G), "\n")
+
+
+# ====================================================================================
 # Longest Increasing Subsequence
 
 # LIS length amongst A[i:n] when all elts in subsequence must be
 # > A[last]
+
+
 def lis_memo_helper(A, mem, last, i):
     if i == len(A):
         return 0
@@ -94,48 +126,66 @@ def longest_increasing_subsequence_bottom_up(A):
     return mem[0][1]
 
 
-print(longest_increasing_subsequence_memo([2, 8, 3, 4]))
-print(longest_increasing_subsequence_bottom_up([2, 8, 3, 4]))
+# print(longest_increasing_subsequence_memo([2, 8, 3, 4]))
+# print(longest_increasing_subsequence_bottom_up([2, 8, 3, 4]))
 
 
-# Traveling Salesman Problem
+# ====================================================================================
+# Edit Distance
 
-# complete graph where w(i,j) is stored as W[i][j]
-# S is a bitmask of which vertices we have yet to visit
-def tsp_helper(W, i, S, mem):
-    if S == 0:
-        return 0
-    elif mem[i][S] != None:
-        return mem[i][S]
+# we want to change string s into string t using as few "edits" as possible
+# an edit can do any one of the following three things:
+# 1) remove any character from s (or t), from any position  (bath -> bat)
+# 2) insert any character into s (or t), at any position (cat -> coat)
+# 3) substitute any character in s (or t) for another one, at any position
+#    (e.g. dag --> dog)
+
+# edit distance between s[i:] and t[j:]
+def ed_helper(s, t, i, j, mem):
+    if i == len(s):
+        return len(t) - j
+    elif j == len(t):
+        return len(s) - i
+    elif mem[i][j] is not None:
+        return mem[i][j]
     else:
-        mem[i][S] = float('infinity')
-        for j in range(len(W)):
-            if S & (1 << j) != 0:
-                mem[i][S] = min(mem[i][S], W[i][j] + tsp_helper(W, j, S ^ (1 << j), mem))
-        return mem[i][S]
+        A = 1 + ed_helper(s, t, i + 1, j, mem)  # delete s[i]
+        B = 1 + ed_helper(s, t, i, j + 1, mem)  # insert t[j] right before s[i]
+        C = 1 + ed_helper(s, t, i + 1, j + 1, mem)  # substitute s[i] for t[j]
+        if s[i] == t[j]:
+            C -= 1  # don't need to do the substitution if chars already equal
+        mem[i][j] = min(A, B, C)
+        return mem[i][j]
 
 
-# must start at vertex 0 and visit every other vertex
-def tsp_memoized(W):
-    mem = [[None] * (1 << len(W)) for _ in range(len(W))]
-    return tsp_helper(W, 0, (1 << len(W)) - 2, mem)
+def edit_distance(s, t):
+    mem = [[None] * len(t) for _ in range(len(s))]
+    return ed_helper(s, t, 0, 0, mem)
 
 
-points = [
-    [0, 0],
-    [0, 1],
-    [0, 2],
-    [10, 0],
-    [10, 1],
-    [10, 2],
-]
+def edit_distance_bottom_up(s, t):
+    m = len(s)
+    n = len(t)
+    dp = [[float("inf")] * (n + 1) for _ in range(m + 1)]
+    for i in range(m + 1):
+        for j in range(n + 1):
+            if i == 0:
+                dp[i][j] = j
+            elif j == 0:
+                dp[i][j] = i
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            left = dp[i][j - 1] + 1
+            up = dp[i - 1][j] + 1
+            left_up = dp[i - 1][j - 1]
+            if s[i - 1] != t[j - 1]:
+                left_up += 1
+            dp[i][j] = min(left, up, left_up)
+    return dp[-1][-1]
 
-W = [[None] * len(points) for _ in range(len(points))]
-for i in range(len(points)):
-    for j in range(len(points)):
-        W[i][j] = ((points[i][0] - points[j][0]) ** 2 + (points[i][1] - points[j][1]) ** 2) ** 0.5
 
-print(tsp_memoized(W))
+# print(edit_distance('coasfsdgfdhgfat', 'cofasdtasdasdasdasdasdasdasd'))
+# print(edit_distance_bottom_up('coasfsdgfdhgfat', 'cofasdtasdasdasdasdasdasdasd'))
 
 
 # Matrix Chain Multiplication
@@ -153,7 +203,7 @@ print(tsp_memoized(W))
 def mcm_helper(s, i, j, mem):
     if i == j:
         return 0
-    elif mem[i][j] != None:
+    elif mem[i][j] is not None:
         return mem[i][j]
     else:
         mem[i][j] = float('infinity')
@@ -172,39 +222,45 @@ def matrix_chain_mult(s):
 
 # best to multiply 3x2 with 2x1, then 3x3 with resulting 3x1
 # that is, (A x (B x C)) is better here than ((A x B) x C)
-matrix_chain_mult([3, 3, 2, 1])
+print(matrix_chain_mult([3, 3, 2, 1]))
 
 
-# Edit Distance
+# # Traveling Salesman Problem
+#
+# # complete graph where w(i,j) is stored as W[i][j]
+# # S is a bitmask of which vertices we have yet to visit
+# def tsp_helper(W, i, S, mem):
+#     if S == 0:
+#         return 0
+#     elif mem[i][S] != None:
+#         return mem[i][S]
+#     else:
+#         mem[i][S] = float('infinity')
+#         for j in range(len(W)):
+#             if S & (1 << j) != 0:
+#                 mem[i][S] = min(mem[i][S], W[i][j] + tsp_helper(W, j, S ^ (1 << j), mem))
+#         return mem[i][S]
+#
+#
+# # must start at vertex 0 and visit every other vertex
+# def tsp_memoized(W):
+#     mem = [[None] * (1 << len(W)) for _ in range(len(W))]
+#     return tsp_helper(W, 0, (1 << len(W)) - 2, mem)
+#
+#
+# points = [
+#     [0, 0],
+#     [0, 1],
+#     [0, 2],
+#     [10, 0],
+#     [10, 1],
+#     [10, 2],
+# ]
+#
+# W = [[None] * len(points) for _ in range(len(points))]
+# for i in range(len(points)):
+#     for j in range(len(points)):
+#         W[i][j] = ((points[i][0] - points[j][0]) ** 2 + (points[i][1] - points[j][1]) ** 2) ** 0.5
+#
+# print(tsp_memoized(W))
 
-# we want to change string s into string t using as few "edits" as possible
-# an edit can do any one of the following three things:
-# 1) remove any character from s (or t), from any position  (bath -> bat)
-# 2) insert any character into s (or t), at any position (cat -> coat)
-# 3) substitute any character in s (or t) for another one, at any position
-#    (e.g. dag --> dog)
-
-# edit distance between s[i:] and t[j:]
-def ed_helper(s, t, i, j, mem):
-    if i == len(s):
-        return len(t) - j
-    elif j == len(t):
-        return len(s) - i
-    elif mem[i][j] != None:
-        return mem[i][j]
-    else:
-        A = 1 + ed_helper(s, t, i + 1, j, mem)  # delete s[i]
-        B = 1 + ed_helper(s, t, i, j + 1, mem)  # insert t[j] right before s[i]
-        C = 1 + ed_helper(s, t, i + 1, j + 1, mem)  # substitute s[i] for t[j]
-        if s[i] == t[j]:
-            C -= 1  # don't need to do the substitution if chars already equal
-        mem[i][j] = min(A, B, C)
-        return mem[i][j]
-
-
-def edit_distance(s, t):
-    mem = [[None] * len(t) for _ in range(len(s))]
-    return ed_helper(s, t, 0, 0, mem)
-
-
-edit_distance('coat', 'cot')
