@@ -5,9 +5,11 @@ Given an input string s and a pattern p, implement regular expression matching w
 '*' Matches zero or more of the preceding element.
 The matching should cover the entire input string (not partial).
 """
+from functools import *
+from itertools import *
 
 
-class Solution(object):
+class Solution:
     def isMatch(self, text, pattern):
         memo = {}
 
@@ -36,7 +38,7 @@ The matching should cover the entire input string (not partial).
 """
 
 
-class Solution:
+class Solution1:
     def isMatch(self, s: str, p: str) -> bool:
         n, m = len(s), len(p)
 

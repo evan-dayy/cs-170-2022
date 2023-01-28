@@ -153,3 +153,4 @@ def karatsuba_mul(x, y):
 
 print(karatsuba_mul('24', '451'))
 print(24 * 451)
+
